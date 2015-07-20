@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8"></meta>
+	<link href="css/main.css" type="text/css" rel="stylesheet" />
+	<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/data.js"></script>
+</head>
+<body>
+<div class="wrap" id="wrap">
+		<!--photo负责平移-->
+		<div class="photo photo_front" onclick="turn(this)" id="photo_{{index}}">
+		<!--photo—wrap负责旋转-->
+			<div class="photo-wrap">
+				<div class="side side-front">
+					<p class="image"><img src="img/{{img}}"/></p>
+					<p class="caption">{{caption}}</p>
+				</div>
+				<div class="side side-back">
+					<p class="desc">{{desc}}</p>
+				</div>
+			</div>
+		</div>
+</div>
+<script type="text/javascript">
+	var data=data;
+	var length=data.length;
+	window.onload=function(){
+		addphotos();
+		rsort(random([0,length]));
+	}
+
+	//翻面控制
+	function turn(elem){
+		var cls=elem.className;
+		if(/photo_front/.test(cls)){
+			cls=cls.replace(/photo_front/,'photo_back');
+		}else{
+			cls=cls.replace(/photo_back/,'photo_front');
+		}
+		return elem.className=cls;
+	}
+
+	function g(selector){
+		var method=selector.substr(0,1)=="."?'getElementsByClassName':'getElementById';
+		return document[method](selector.substr(1));
+	}
+
+	//排序海报 并分为中间 左右
+	function rsort(n){
+		var _photo=g(".photo");
+		var photos=[];
+		var photo_center=g("#photo_"+n);
+		for(var s=0;s<_photo.length;s++){
+			_photo[s].className=_photo[s].className.replace(/\s*photo_center\s*/,"");
+			photos.push(_photo[s]);
+		}
+		photo_center.className+=" photo_center";
+		photo_center=photos.splice(n,1);
+
+		//把海报分为左右两个部分
+		var photo_left=photos.splice(0,Math.ceil(photos.length/2));
+		var photo_right=photos;
+		var ranges=range();
+		for(s in photo_left){
+			var photo=photo_left[s];
+			photo.style.left=random(ranges.left.x)+"px";
+			photo.style.top=random(ranges.left.y)+"px";
+			photo.style['-webkit-transform']='rotate('+random([-150,150])+'deg)';
+		}
+
+		for(s in photo_right){
+			var photo=photo_right[s];
+			photo.style.left=random(ranges.right.x)+"px";
+			photo.style.top=random(ranges.right.y)+"px";
+			photo.style['-webkit-transform']='rotate('+random([-150,150])+'deg)';
+		}
+	}
+	//生成随机数，random[min,max]
+	function random(range){
+		var max=Math.max(range[0],range[1]);
+		var min=Math.min(range[0],range[1]);
+		var diff=max-min;//差值 [1,6]=5
+		var number=Math.ceil((Math.random()*diff)+min)//如果不加min 则范围为 （x>0 x<5）而实际应为（x>1 x<6）
+		return number;
+	}
+	//根据极限范围就是最左边不超过最上边不超过最右边不超过最底下不超过 来判断随机的两边图片
+	//{left:{x:[min,max]},{y:[min,max]}},right:{x:[min,max]},{y:[min,max]}} 
+	function range(){
+		var range={left:{x:[],y:[]},right:{x:[],y:[]}};
+		var wrap={
+			w:g("#wrap").clientWidth,
+			h:g("#wrap").clientHeight
+		}
+		var photo={
+			w:g(".photo")[0].clientWidth,
+			h:g(".photo")[0].clientHeight
+		}
+		range.left.x=[0-photo.w,wrap.w/2-photo.w/2];
+		range.left.y=[0-photo.h,wrap.h];
+		range.right.x=[wrap.w/2+photo.w/2,wrap.w+photo.w/2];
+		range.right.y=[0-photo.h,wrap.h];
+		return range;
+	}
+
+	function addphotos(){
+		var template=g('#wrap').innerHTML;
+		var html=[];
+		for(var s=0;s<data.length-1;s++){
+			var _html=template
+						.replace("{{index}}",s)
+						.replace("{{img}}",data[s].img)
+						.replace("{{caption}}",data[s].caption)
+						.replace("{{desc}}",data[s].desc)
+			html.push(_html);
+		}
+		g('#wrap').innerHTML=html.join("");
+	}
+</script>
+</body>
+</html>
